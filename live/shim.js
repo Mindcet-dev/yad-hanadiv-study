@@ -11,7 +11,11 @@
 
   // The page links uploaded files as "/_blob/<id>"; the build rewrites those to __blobUrl(id).
   const STORAGE_ORIGIN = CFG.emulators ? `http://${CFG.emulators.host}:9199` : "https://firebasestorage.googleapis.com";
-  window.__blobUrl = id => `${STORAGE_ORIGIN}/v0/b/${BUCKET}/o/${encodeURIComponent("assets/" + id)}?alt=media`;
+  // Files migrated from the Claude version are served from the site itself (assets-map.js, written by the build).
+  // New uploads go to Firebase Storage only when CFG.uploads is on (needs the Blaze plan); otherwise the page offers links only.
+  const UPLOADS = !!CFG.uploads;
+  window.__blobUrl = id => (window.STATIC_ASSETS || {})[id]
+    || `${STORAGE_ORIGIN}/v0/b/${BUCKET}/o/${encodeURIComponent("assets/" + id)}?alt=media`;
 
   const err = (code, cause) => Object.assign(new Error(code), { code, cause });
   const mapErr = x => {
@@ -25,9 +29,9 @@
   let ready;
   const start = () => ready || (ready = (async () => {
     if (!CFG.firebase.apiKey || CFG.firebase.apiKey === "REPLACE_ME") { comingSoon(); await new Promise(() => {}); }
-    const [{ initializeApp }, A, F, S] = await Promise.all([sdk("app"), sdk("auth"), sdk("firestore"), sdk("storage")]);
+    const [{ initializeApp }, A, F, S] = await Promise.all([sdk("app"), sdk("auth"), sdk("firestore"), UPLOADS ? sdk("storage") : null]);
     const app = initializeApp(CFG.firebase);
-    const auth = A.getAuth(app), fs = F.getFirestore(app), st = S.getStorage(app);
+    const auth = A.getAuth(app), fs = F.getFirestore(app), st = UPLOADS ? S.getStorage(app) : null;
     if (CFG.emulators) await useEmulators(CFG.emulators, { A, F, S, auth, fs, st });
     const user = await new Promise(res => {
       const off = A.onAuthStateChanged(auth, u => { if (u) { off(); res(u); } else loginScreen(auth, A); });
@@ -47,7 +51,7 @@
   async function useEmulators(em, { A, F, S, auth, fs, st }) {
     A.connectAuthEmulator(auth, `http://${em.host}:9099`, { disableWarnings: true });
     F.connectFirestoreEmulator(fs, em.host, 8080);
-    S.connectStorageEmulator(st, em.host, 9199);
+    if (st) S.connectStorageEmulator(st, em.host, 9199);
     if (em.signInAs) {
       const claims = { sub: em.signInAs.uid, email: em.signInAs.email, email_verified: true, name: em.signInAs.name };
       await A.signInWithCredential(auth, A.GoogleAuthProvider.credential(JSON.stringify(claims)));
@@ -120,7 +124,7 @@
       const env = await start();
       if (name === "db") return makeDb(env);
       if (name === "user") return makeUser(env);
-      if (name === "assets") return makeAssets(env);
+      if (name === "assets") return UPLOADS ? makeAssets(env) : null;
       return null;
     },
   };
@@ -185,7 +189,7 @@
     bar.querySelector("button").onclick = async () => {
       const span = bar.querySelector("span"); bar.querySelector("button").remove();
       try {
-        const ids = Object.keys(seed.assets);
+        const ids = UPLOADS ? Object.keys(seed.assets) : [];
         for (const [i, id] of ids.entries()) {
           span.textContent = `מעלה קבצים (${i + 1}/${ids.length})…`;
           const a = seed.assets[id];

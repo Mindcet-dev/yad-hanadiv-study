@@ -13,7 +13,7 @@ if (html.includes("/_blob/")) throw new Error("Unhandled /_blob/ reference in si
 // The adapter must run before the page's own (first) inline script.
 const first = html.indexOf("<script>");
 if (first < 0) throw new Error("No inline <script> found in site-src/index.html");
-const live = `<script src="config.js"></script>\n<script src="shim.js"></script>\n`;
+const live = `<script src="config.js"></script>\n<script src="assets-map.js"></script>\n<script src="shim.js"></script>\n`;
 html = html.slice(0, first) + live + html.slice(first);
 html = html.replace(/<meta name="claude:[^>]*>\n?/g, "");
 
@@ -27,6 +27,10 @@ mkdirSync("dist");
 writeFileSync("dist/index.html", html);
 cpSync("live", "dist", { recursive: true });
 cpSync("seed", "dist/seed", { recursive: true });
+// Files exported from the artifact are served statically, keyed by their original asset id.
+const seed = JSON.parse(readFileSync("seed/data.json", "utf8"));
+const map = Object.fromEntries(Object.entries(seed.assets).map(([id, a]) => [id, "seed/" + a.file]));
+writeFileSync("dist/assets-map.js", `window.STATIC_ASSETS = ${JSON.stringify(map, null, 1)};\n`);
 writeFileSync("dist/CNAME", DOMAIN + "\n");
 writeFileSync("dist/.nojekyll", "");
 console.log("Built dist/ for", DOMAIN);

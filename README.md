@@ -21,7 +21,7 @@ on every push to `main`.
 1. Firebase: create a project, add a Web app, copy its config into `live/config.js`.
 2. Authentication → Sign-in method → enable Google. Settings → Authorized domains → add `yad-hanadiv-study.mindcet.io`.
 3. Firestore: create the database (production mode), then publish `firestore.rules`.
-4. Storage: upgrade to Blaze, create the default bucket, then publish `storage.rules`.
+4. Optional, for uploads from the site: upgrade to Blaze, create the default Storage bucket, publish `storage.rules`, and set `uploads: true` in `live/config.js`. Without it (free Spark plan) participants add files as links, and the files migrated from the artifact are served from `seed/files/` on Pages.
 5. Firestore → `facilitators/{email}`: add the facilitators.
 6. GitHub → Settings → Pages → Source: GitHub Actions. Custom domain: `yad-hanadiv-study.mindcet.io`, Enforce HTTPS.
 7. DNS at mindcet.io: `CNAME yad-hanadiv-study → mindcet-dev.github.io`.

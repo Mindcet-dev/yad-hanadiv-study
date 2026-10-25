@@ -1,7 +1,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const DIST = __dirname + '/../dist';
-const cfg = who => `window.LIVE_CONFIG={siteName:"מרחב הלמידה המשותף",firebase:{apiKey:"fake",authDomain:"demo-yad.firebaseapp.com",projectId:"demo-yad",storageBucket:"demo-yad.appspot.com",appId:"x"},emulators:{host:"127.0.0.1",signInAs:${JSON.stringify(who)}}};`;
+const cfg = who => `window.LIVE_CONFIG={siteName:"מרחב הלמידה המשותף",uploads:${process.env.UPLOADS === "1"},firebase:{apiKey:"fake",authDomain:"demo-yad.firebaseapp.com",projectId:"demo-yad",storageBucket:"demo-yad.appspot.com",appId:"x"},emulators:{host:"127.0.0.1",signInAs:${JSON.stringify(who)}}};`;
 async function page(browser, who) {
   const ctx = await browser.newContext();
   await ctx.route('http://127.0.0.1:5555/**', r => {
@@ -33,9 +33,9 @@ async function page(browser, who) {
   await fac.waitForTimeout(1500);
   console.log('fac pill:', await fac.$eval('#who', e => e.textContent));
   await fac.goto('http://127.0.0.1:5555/#session-1'); await fac.waitForTimeout(3000);
-  const hrefs = await fac.$$eval('a[href*="9199"]', as => as.map(a => a.href));
+  const hrefs = await fac.$$eval('a[href*="9199"], a[href*="seed/files"]', as => as.map(a => a.href));
   console.log('material links:', hrefs.length);
-  if (hrefs[0]) console.log('pdf status:', (await fetch(hrefs[0])).status);
+  if (hrefs[0]) console.log('file status:', await fac.evaluate(u => fetch(u).then(r => r.status), hrefs[0]));
   await fac.screenshot({ path: 'fac.png', fullPage: false });
 
   const p = await page(browser, { uid: 'p1', email: 'p@example.com', name: 'Participant' });
@@ -55,6 +55,8 @@ async function page(browser, who) {
     const user = await claude.use('user'); out.isOwner = await user.isOwner();
     out.profiles = JSON.stringify(await user.profiles(others));
     const assets = await claude.use('assets');
+    out.assets = !!assets;
+    if (!assets) return out;
     await t('uploadPdf', async () => { out.up = (await assets.upload(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), { type: 'application/pdf' })).id; });
     await t('uploadDocx', () => assets.upload(new Blob(['x']), { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
     await t('deleteSeedAsset', () => assets.delete('11567f1ef526c6abeb26f4f6bc01e1a9'));
