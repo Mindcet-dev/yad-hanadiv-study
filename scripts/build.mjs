@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync, mkdirSync, cpSync, rmSync } from "node:fs"
 const DOMAIN = "yad-hanadiv-study.mindcet.io";
 let html = readFileSync("site-src/index.html", "utf8");
 
-// Uploaded files are linked as "/_blob/<id>" inside Claude; point them at Firebase Storage instead.
+// Uploaded files are linked as "/_blob/<id>" inside Claude; on the live site __blobUrl (live/shim.js) maps them to static seed files or Supabase Storage.
 html = html
   .replace(/\/_blob\/\$\{esc\(encodeURIComponent\(([^)]+)\)\)\}/g, "${esc(__blobUrl($1))}")
   .replace(/"\/_blob\/"\s*\+\s*encodeURIComponent\(([^)]+)\)/g, "__blobUrl($1)");
