@@ -1,0 +1,832 @@
+<title>מרחב הלמידה המשותף</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Heebo:wght@400;500;700&display=swap">
+<style>
+/* Layout: a calm reading column with a sticky tab bar; official content sits on a warm "paper" panel, participant content on cool cards. */
+:root{
+  --bg:#f3f6f5; --surface:#ffffff; --sunk:#e6edeb; --ink:#14252b; --muted:#566a70; --line:#d3dedb;
+  --accent:#0d6b5e; --accent-ink:#ffffff; --accent-soft:#d9ece8;
+  --official:#fbf3dd; --official-line:#e3c56f; --official-ink:#6b4d00;
+  --q:#3b4fa0; --q-soft:#e3e7f7; --danger:#b23a2e;
+  --f-display:"Rubik","Heebo","Segoe UI","Arial",sans-serif;
+  --f-body:"Heebo","Segoe UI","Arial",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1719; --surface:#172226; --sunk:#1d2a2e; --ink:#e4eeec; --muted:#9fb3b5; --line:#2b3b3f;
+  --accent:#4fc0ab; --accent-ink:#06211c; --accent-soft:#18342f;
+  --official:#2a2412; --official-line:#8a7130; --official-ink:#ebd08a;
+  --q:#9fb0f5; --q-soft:#1f2643; --danger:#f08a7e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1719; --surface:#172226; --sunk:#1d2a2e; --ink:#e4eeec; --muted:#9fb3b5; --line:#2b3b3f;
+  --accent:#4fc0ab; --accent-ink:#06211c; --accent-soft:#18342f;
+  --official:#2a2412; --official-line:#8a7130; --official-ink:#ebd08a;
+  --q:#9fb0f5; --q-soft:#1f2643; --danger:#f08a7e; color-scheme:dark}
+*{box-sizing:border-box}
+html{direction:rtl}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6;direction:rtl;text-align:right}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.2;text-wrap:balance;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;gap:12px;padding-block:10px 4px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:1.1rem;text-decoration:none;color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--muted)}
+.who img{width:26px;height:26px;border-radius:50%}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 10px;font-size:.78rem;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.pill.fac{background:var(--official);color:var(--official-ink);border:1px solid var(--official-line)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding-bottom:0}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs a{flex:none;text-decoration:none;color:var(--muted);padding:8px 12px;border-bottom:3px solid transparent;font-weight:600;font-size:.95rem}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+main{padding-block:24px 64px;display:flex;flex-direction:column;gap:28px}
+.notice{background:var(--sunk);border-radius:var(--r);padding:12px 16px;font-size:.95rem}
+.notice.warn{background:var(--official);color:var(--official-ink)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:600;font-size:.95rem;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{padding:3px 10px;font-size:.85rem}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.spread{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+
+/* hero */
+.hero{display:flex;flex-direction:column;gap:14px;padding-top:8px}
+.eyebrow{font-size:.85rem;font-weight:700;letter-spacing:.06em;color:var(--accent)}
+.hero h1{font-size:clamp(2rem,6vw,3.2rem);font-weight:800}
+.context{background:var(--official);border:1px solid var(--official-line);border-radius:14px;padding:22px clamp(16px,4vw,32px);display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px 32px}
+.context .ctx-q{grid-column:1/-1;border-top:1px dashed var(--official-line);padding-top:16px}
+.context h3{font-family:var(--f-body);font-size:.82rem;letter-spacing:.06em;color:var(--official-ink);font-weight:700;margin-bottom:4px}
+.context p{margin:0;white-space:pre-line;max-width:65ch}
+.ctx-q p{font-family:var(--f-display);font-size:clamp(1.3rem,3.4vw,1.75rem);font-weight:700;line-height:1.35}
+.official-tag{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--official-ink);letter-spacing:.04em}
+.official-tag::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--official-line)}
+
+/* section heads */
+.sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px}
+.sec-head h2{font-size:1.6rem}
+.sec-head p{margin:0;color:var(--muted);font-size:.95rem}
+
+/* sessions grid */
+.sessions{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;list-style:none;margin:0;padding:0}
+.s-card{display:flex;flex-direction:column;gap:6px;height:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;text-decoration:none;color:var(--ink)}
+.s-card:hover{border-color:var(--accent)}
+.s-num{font-family:var(--f-display);font-size:2.2rem;font-weight:900;line-height:1;color:var(--accent)}
+.s-card.upcoming .s-num{color:var(--muted)}
+.s-date{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.s-title{font-weight:700;line-height:1.3}
+.s-meta{margin-top:auto;font-size:.8rem;color:var(--muted)}
+
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.q-tile{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:var(--r);background:var(--sunk);text-decoration:none;color:var(--ink)}
+.q-tile:hover{background:var(--accent-soft)}
+.q-tile b{font-size:1.05rem}
+.q-tile span{font-size:.88rem;color:var(--muted)}
+.q-tile .count{font-variant-numeric:tabular-nums}
+
+/* official panel on session page */
+.panel-off{background:var(--official);border:1px solid var(--official-line);border-radius:14px;padding:20px clamp(16px,4vw,28px);display:flex;flex-direction:column;gap:16px}
+.panel-off h3{font-size:1.15rem}
+.panel-off .body{white-space:pre-line;max-width:70ch;margin:0}
+.panel-off ul{margin:0;padding-inline-start:20px}
+.empty-soft{color:var(--muted);font-style:italic;margin:0}
+.s-head{display:flex;flex-direction:column;gap:6px}
+.s-head h1{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:800}
+.s-head .desc{max-width:65ch;margin:0;color:var(--muted);white-space:pre-line}
+.s-pager{display:flex;justify-content:space-between;gap:10px}
+
+/* items */
+.list{display:flex;flex-direction:column;gap:10px;list-style:none;margin:0;padding:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;list-style:none;margin:0;padding:0}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.item.is-official{background:var(--official);border-color:var(--official-line)}
+.item h3{font-family:var(--f-body);font-size:1.05rem;font-weight:700;overflow-wrap:anywhere}
+.item h3 a{color:var(--ink)}
+.item p{margin:0;overflow-wrap:anywhere;white-space:pre-line}
+.meta{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.83rem;color:var(--muted)}
+.author{display:inline-flex;align-items:center;gap:6px}
+.author img{width:20px;height:20px;border-radius:50%}
+.chip{display:inline-block;border-radius:6px;padding:0 8px;font-size:.78rem;font-weight:600;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip.kind{background:var(--accent-soft);color:var(--accent)}
+.chip.q{background:var(--q-soft);color:var(--q)}
+.chip.off{background:transparent;border:1px solid var(--official-line);color:var(--official-ink)}
+.item .actions{display:flex;gap:6px;justify-content:flex-start}
+.book-by{color:var(--muted);font-size:.92rem}
+
+.filters{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:end;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.filters label{display:flex;flex-direction:column;gap:2px;font-size:.8rem;color:var(--muted);font-weight:600;flex:1 1 140px;min-width:0}
+select,input[type=text],input[type=url],input[type=date],textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 10px;min-width:0}
+textarea{min-height:90px;resize:vertical}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:var(--surface);padding:6px 14px;cursor:pointer;font-weight:600;font-size:.9rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+
+.cat{display:flex;flex-direction:column;gap:10px;padding-top:6px}
+.cat-head{display:flex;gap:12px;align-items:flex-start}
+.cat-n{font-family:var(--f-display);font-weight:900;font-size:1.8rem;line-height:1;color:var(--accent);min-width:1.2em}
+.cat-head h3{font-size:1.25rem}
+.cat-head p{margin:2px 0 0;color:var(--muted);font-size:.93rem;max-width:70ch}
+.ins{border-inline-start:3px solid var(--accent);padding:10px 14px;background:var(--surface);border-radius:4px;display:flex;flex-direction:column;gap:6px}
+.ins.question{border-inline-start-color:var(--q)}
+.ins p{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:18px;color:var(--muted);text-align:center}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(10,20,22,.5);z-index:20;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.modal{background:var(--surface);border-radius:14px;width:100%;max-width:620px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.modal h2{font-size:1.4rem}
+.field{display:flex;flex-direction:column;gap:4px}
+.field>span{font-weight:600;font-size:.92rem}
+.field small,.hint{color:var(--muted);font-size:.82rem}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.err{color:var(--danger);font-size:.9rem;margin:0}
+.check{display:flex;gap:8px;align-items:center;font-weight:600}
+fieldset{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:0}
+legend{font-weight:600;font-size:.92rem;padding:0 4px}
+.rating{display:flex;gap:6px;flex-wrap:wrap}
+.rating label{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer}
+.fb-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.fb-card dl{margin:0;display:grid;grid-template-columns:minmax(110px,auto) 1fr;gap:4px 12px}
+.fb-card dt{color:var(--muted);font-size:.85rem}
+.fb-card dd{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;list-style:none;margin:0;padding:0}
+.gallery li{position:relative;border-radius:8px;overflow:hidden;background:var(--sunk);aspect-ratio:4/3;max-width:100%}
+.gallery img{width:100%;height:100%;object-fit:cover;display:block}
+.gallery .rm{position:absolute;top:6px;inset-inline-end:6px;background:var(--surface);border:1px solid var(--line);border-radius:6px;font-size:.78rem;padding:1px 8px;cursor:pointer}
+.toast{position:fixed;bottom:max(16px,env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 18px;border-radius:999px;z-index:30;font-weight:600}
+@media (prefers-reduced-motion:no-preference){.modal{animation:pop .16s ease-out}@keyframes pop{from{transform:translateY(8px);opacity:.6}}}
+@media (max-width:520px){.who .nm{display:none}body{font-size:16px}}
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="wrap">
+      <div class="top-row">
+        <a class="brand" href="#home" id="brand">מרחב הלמידה המשותף</a>
+        <div class="who" id="who"></div>
+      </div>
+      <nav class="tabs" id="tabs" aria-label="ניווט ראשי">
+        <a href="#home">פתיחה</a>
+        <a href="#sessions">המפגשים</a>
+        <a href="#materials">קבצים וקישורים</a>
+        <a href="#reading">המלצות קריאה</a>
+        <a href="#insights">תובנות ושאלות</a>
+        <a href="#feedback">משוב והצעות</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap" id="main">
+    <div class="notice">טוען את מרחב הלמידה… אם הדף נשאר כך, יש לוודא שנכנסת עם החשבון שאליו נשלחה ההזמנה.</div>
+  </main>
+</div>
+<div id="modal-root"></div>
+
+<script>
+(() => {
+"use strict";
+const SESSIONS = [1,2,3,4,5,6];
+const CATS = [
+  {n:1,t:"קידום שוויון הזדמנויות וצמצום פערים",q:"האם אדטק הצליח לצמצם פערי למידה, ובאיזו מידה?"},
+  {n:2,t:"למידה אדפטיבית",q:"באיזו מידה הצלחנו להתאים את הלמידה לצרכים האישיים של הלומדים?"},
+  {n:3,t:"קבלת החלטות מבוססת נתונים",q:"מה למדנו מאיסוף וניתוח נתוני למידה, וכיצד הם השפיעו על ההוראה והלמידה?"},
+  {n:4,t:"רתימת תרבות האינטרנט",q:"כיצד אדטק רתם דפוסי התנהגות, תקשורת ולמידה שהתפתחו ברשת?"},
+  {n:5,t:"יצירת מוטיבציה",q:"מה הצליח ומה לא הצליח במאמצים לעודד תלמידים ללמוד באמצעות טכנולוגיה?"},
+  {n:6,t:"הסרת חסמי כניסה והטמעה בבתי הספר",q:"מה מקשה על פתרונות טכנולוגיים להיכנס לבתי הספר ולהשתלב בהם, וכיצד אפשר להסיר חסמים אלה?"},
+  {n:7,t:"עידוד סטארטאפים בתחום האדטק",q:"איך אפשר לעודד הקמה וצמיחה של חברות שמפתחות פתרונות משמעותיים ללמידה?"},
+];
+const catName = n => (CATS.find(c => c.n === +n) || {}).t || "";
+const FILE_ACCEPT = ".pdf,.png,.jpg,.jpeg,.gif,.webp,.mp4,.webm,.csv,.txt,.md";
+const TYPE_BY_EXT = {pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",webp:"image/webp",mp4:"video/mp4",webm:"video/webm",csv:"text/csv",txt:"text/plain",md:"text/markdown"};
+
+const S = {
+  db:null, user:null, assets:null, me:null, myId:null, isFac:false, canWrite:true, ready:false,
+  home:null, sessions:{}, people:{}, materials:[], reading:[], insights:[], feedback:[], myFeedback:null,
+  profiles:{},
+  f:{mSession:"",mTopic:"",mType:"", rSession:"", iView:"cat", iSession:"", iType:"", iCat:""},
+};
+
+const $ = (s, el=document) => el.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const safeUrl = u => { try { const x = new URL(String(u).trim()); return /^https?:$/.test(x.protocol) ? x.href : ""; } catch { return ""; } };
+const fmtDate = d => { if (!d) return ""; const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString("he-IL",{day:"numeric",month:"long",year:"numeric"}); };
+const todayISO = () => new Date().toISOString().slice(0,10);
+const lines = t => String(t||"").split("\n").map(s => s.trim()).filter(Boolean);
+const sessName = n => { const s = S.sessions[n]; return s && s.title ? `מפגש ${n}: ${s.title}` : `מפגש ${n}`; };
+const sessOptions = (sel, withNone=true, noneLabel="ללא שיוך למפגש") =>
+  (withNone ? `<option value="">${noneLabel}</option>` : "") +
+  SESSIONS.map(n => `<option value="${n}" ${String(sel)===String(n)?"selected":""}>${esc(sessName(n))}</option>`).join("");
+const catOptions = (sel, withNone=false) =>
+  (withNone ? `<option value="">כל הקטגוריות</option>` : "") +
+  CATS.map(c => `<option value="${c.n}" ${String(sel)===String(c.n)?"selected":""}>${c.n}. ${esc(c.t)}</option>`).join("");
+
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
+
+/* ---------- people ---------- */
+function nameOf(uid, fallback){
+  if (!uid) return fallback || "המנחה";
+  const p = S.people[uid]; if (p && p.name) return p.name;
+  const pr = S.profiles[uid]; if (pr && pr.name) return pr.name;
+  return fallback || "משתתף/ת";
+}
+function avatarOf(uid){ const pr = S.profiles[uid]; return pr ? pr.avatarUrl : ""; }
+async function refreshProfiles(){
+  if (!S.user) return;
+  const ids = new Set();
+  [...S.materials, ...S.reading, ...S.insights, ...S.feedback].forEach(d => d.createdBy && ids.add(d.createdBy));
+  if (S.myId) ids.add(S.myId);
+  const list = [...ids].filter(Boolean);
+  if (!list.length) return;
+  try { const ps = await S.user.profiles(list); const changed = list.some(id => !S.profiles[id] || S.profiles[id].name !== ps[id].name); S.profiles = {...S.profiles, ...ps}; if (changed) render(); } catch {}
+}
+const authorHTML = (uid, label) => {
+  const av = avatarOf(uid);
+  return `<span class="author">${av?`<img src="${esc(av)}" alt="">`:""}<span>${esc(label || nameOf(uid))}</span></span>`;
+};
+const canManage = d => S.isFac || (S.myId && d.createdBy === S.myId);
+
+/* ---------- routing ---------- */
+function route(){
+  const h = (location.hash || "#home").slice(1);
+  if (/^session-[1-6]$/.test(h)) return {name:"session", n:+h.split("-")[1]};
+  if (["home","sessions","materials","reading","insights","feedback"].includes(h)) return {name:h};
+  return {name:"home"};
+}
+let lastRouteKey = "";
+window.addEventListener("hashchange", () => { render(true); window.scrollTo(0,0); });
+
+function setTabs(r){
+  const key = r.name === "session" ? "sessions" : r.name;
+  document.querySelectorAll("#tabs a").forEach(a => a.setAttribute("aria-current", a.getAttribute("href") === "#"+key ? "page" : "false"));
+}
+
+/* ---------- render ---------- */
+function render(force){
+  const r = route(); setTabs(r);
+  const key = r.name + (r.n||"");
+  renderWho();
+  const brand = (S.home && S.home.processName) || "מרחב הלמידה המשותף";
+  $("#brand").textContent = brand;
+  if (!S.ready) return;
+  const main = $("#main");
+  const routeChanged = key !== lastRouteKey; lastRouteKey = key;
+  if (r.name === "feedback" && !routeChanged && !force && $("#fb-side")) { renderFeedbackSide(); return; }
+  let html = notices();
+  if (r.name === "home") html += viewHome();
+  else if (r.name === "sessions") html += viewSessions();
+  else if (r.name === "session") html += viewSession(r.n);
+  else if (r.name === "materials") html += viewMaterials();
+  else if (r.name === "reading") html += viewReading();
+  else if (r.name === "insights") html += viewInsights();
+  else if (r.name === "feedback") html += viewFeedback();
+  main.innerHTML = html;
+  if (r.name === "feedback") { renderFeedbackSide(); if (S.myFeedback !== null) fillFeedbackForm(); }
+}
+
+function renderWho(){
+  const el = $("#who"); if (!S.me) { el.innerHTML=""; return; }
+  const nm = nameOf(S.myId, S.me.name || "");
+  el.innerHTML = `${S.isFac?'<span class="pill fac">מנחה</span>':""}<span class="nm">${esc(nm)}</span>${S.me.avatarUrl?`<img src="${esc(S.me.avatarUrl)}" alt="">`:""}<button class="btn ghost small" data-act="profile" type="button">השם שלי</button>`;
+}
+
+function notices(){
+  let h = "";
+  if (!S.db) return `<div class="notice warn">לא ניתן לטעון את התכנים. יש להיכנס לחשבון Claude שאליו נשלחה ההזמנה לאתר, ולרענן את הדף.</div>`;
+  if (!S.canWrite) h += `<div class="notice">יש לך הרשאת צפייה בלבד. כדי להוסיף תכנים, יש לבקש מהמנחה הרשאת עריכה.</div>`;
+  else if (S.myId && !(S.people[S.myId] && S.people[S.myId].name)) h += `<div class="notice spread"><span>איך להציג את שמך ליד התכנים שתוסיפו?</span><button class="btn small primary" data-act="profile" type="button">הגדרת שם</button></div>`;
+  return h;
+}
+
+const counts = n => ({
+  m: S.materials.filter(d => String(d.session)===String(n)).length,
+  r: S.reading.filter(d => String(d.session)===String(n)).length,
+  i: S.insights.filter(d => String(d.session)===String(n)).length,
+});
+
+function sessionCards(){
+  const today = todayISO();
+  return `<ul class="sessions">${SESSIONS.map(n => {
+    const s = S.sessions[n] || {}; const c = counts(n);
+    const up = !s.date || s.date > today;
+    const total = c.m + c.r + c.i;
+    return `<li><a class="s-card ${up?"upcoming":""}" href="#session-${n}">
+      <span class="s-num">${n}</span>
+      <span class="s-date">${s.date?esc(fmtDate(s.date)):"תאריך יעודכן"}</span>
+      <span class="s-title">${esc(s.title || (up?"מפגש קרוב":"מפגש "+n))}</span>
+      <span class="s-meta">${s.summary?"יש סיכום · ":""}${total?total+" פריטים":"עדיין אין פריטים"}</span>
+    </a></li>`;}).join("")}</ul>`;
+}
+
+function viewHome(){
+  const h = S.home || {};
+  const edit = S.isFac ? `<button class="btn small" data-act="edit-home" type="button">עריכת עמוד הפתיחה</button>` : "";
+  const ctx = (h.purpose || h.why || h.question) ? `
+    <section class="context" aria-label="על התהליך">
+      <div><h3>מטרת התהליך</h3><p>${esc(h.purpose||"")}</p></div>
+      <div><h3>למה התהליך הזה</h3><p>${esc(h.why||"")}</p></div>
+      <div class="ctx-q"><h3>השאלה המרכזית שמלווה אותנו</h3><p>${esc(h.question||"")}</p></div>
+    </section>` : `<div class="empty">כאן יופיע טקסט ההקשר: מטרת התהליך, הסיבה לקיומו והשאלה המרכזית.${S.isFac?" אפשר להוסיף אותו בכפתור העריכה.":""}</div>`;
+  const summaries = SESSIONS.filter(n => S.sessions[n] && S.sessions[n].summary).length;
+  return `
+  <section class="hero">
+    <div class="spread"><span class="eyebrow">${esc(h.processName || "תהליך למידה בן שישה מפגשים")}</span>${edit}</div>
+    <h1>${esc(h.title || "מרחב הלמידה המשותף")}</h1>
+    ${ctx}
+  </section>
+  <section class="cat">
+    <div class="sec-head"><h2>ששת המפגשים</h2><p>לכל מפגש עמוד עם סיכום, חומרים ותובנות</p></div>
+    ${sessionCards()}
+  </section>
+  <section class="cat">
+    <div class="sec-head"><h2>גישה מהירה</h2></div>
+    <div class="quick">
+      <a class="q-tile" href="#sessions"><b>סיכומי המפגשים</b><span class="count">${summaries} מתוך 6 סיכומים פורסמו</span></a>
+      <a class="q-tile" href="#materials"><b>ספריית החומרים</b><span class="count">${S.materials.length} קבצים וקישורים</span></a>
+      <a class="q-tile" href="#reading"><b>המלצות קריאה</b><span class="count">${S.reading.length} ספרים ומקורות</span></a>
+      <a class="q-tile" href="#insights"><b>תובנות ושאלות</b><span class="count">${S.insights.filter(d=>d.type!=="question").length} תובנות · ${S.insights.filter(d=>d.type==="question").length} שאלות</span></a>
+    </div>
+  </section>`;
+}
+
+function viewSessions(){
+  return `<section class="cat"><div class="sec-head"><h2>המפגשים</h2><p>סיכומים רשמיים של המנחה, לצד מה שהוסיפו המשתתפים</p></div>${sessionCards()}</section>
+  <section class="list">${SESSIONS.map(n => { const s=S.sessions[n]||{}; return `<article class="item ${s.summary?"is-official":""}">
+    <div class="spread"><h3><a href="#session-${n}">${esc(sessName(n))}</a></h3><span class="s-date">${s.date?esc(fmtDate(s.date)):"תאריך יעודכן"}</span></div>
+    ${s.summary?`<span class="official-tag">סיכום רשמי</span><p>${esc(s.summary.length>260?s.summary.slice(0,260)+"…":s.summary)}</p>`:`<p class="empty-soft">הסיכום עדיין לא פורסם.</p>`}
+  </article>`;}).join("")}</section>`;
+}
+
+function viewSession(n){
+  const s = S.sessions[n] || {};
+  const c = counts(n);
+  const topics = lines(s.topics), ins = lines(s.insights);
+  const mats = S.materials.filter(d => String(d.session)===String(n));
+  const books = S.reading.filter(d => String(d.session)===String(n));
+  const its = S.insights.filter(d => String(d.session)===String(n));
+  return `
+  <section class="s-head">
+    <a href="#sessions" class="hint">← כל המפגשים</a>
+    <span class="eyebrow">מפגש ${n} מתוך 6 · ${s.date?esc(fmtDate(s.date)):"תאריך יעודכן"}</span>
+    <h1>${esc(s.title || "מפגש "+n)}</h1>
+    ${s.description?`<p class="desc">${esc(s.description)}</p>`:""}
+    ${S.isFac?`<div><button class="btn small" data-act="edit-session" data-n="${n}" type="button">עריכת פרטי המפגש והסיכום</button></div>`:""}
+  </section>
+  <section class="panel-off" aria-label="סיכום רשמי">
+    <span class="official-tag">סיכום רשמי · מאת המנחה</span>
+    <div><h3>סיכום המפגש</h3>${s.summary?`<p class="body">${esc(s.summary)}</p>`:`<p class="empty-soft">הסיכום יפורסם אחרי המפגש.</p>`}</div>
+    <div class="two">
+      <div><h3>נושאים ושאלות שעלו</h3>${topics.length?`<ul>${topics.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`:`<p class="empty-soft">טרם עודכן.</p>`}</div>
+      <div><h3>תובנות מרכזיות</h3>${ins.length?`<ul>${ins.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`:`<p class="empty-soft">טרם עודכן.</p>`}</div>
+    </div>
+  </section>
+  ${galleryHTML(n, s)}
+  <section class="cat">
+    <div class="sec-head"><h2>קבצים וקישורים</h2>${S.canWrite?`<button class="btn small primary" data-act="add-material" data-session="${n}" type="button">הוספת קובץ או קישור</button>`:""}</div>
+    ${mats.length?`<ul class="grid2">${mats.map(materialCard).join("")}</ul>`:`<div class="empty">עדיין לא נוספו חומרים למפגש הזה.</div>`}
+  </section>
+  <section class="cat">
+    <div class="sec-head"><h2>ספרים ומקורות קריאה שהוזכרו</h2>${S.canWrite?`<button class="btn small primary" data-act="add-reading" data-session="${n}" type="button">הוספת המלצה</button>`:""}</div>
+    ${books.length?`<ul class="grid2">${books.map(readingCard).join("")}</ul>`:`<div class="empty">עדיין לא נוספו המלצות קריאה למפגש הזה.</div>`}
+  </section>
+  <section class="cat">
+    <div class="sec-head"><h2>תובנות ושאלות מהמשתתפים</h2>${S.canWrite?`<button class="btn small primary" data-act="add-insight" data-session="${n}" type="button">הוספת תובנה או שאלה</button>`:""}</div>
+    ${its.length?`<ul class="list">${its.map(d=>insightCard(d,true)).join("")}</ul>`:`<div class="empty">עדיין לא נוספו תובנות או שאלות מהמפגש הזה.</div>`}
+  </section>
+  <nav class="s-pager" aria-label="מעבר בין מפגשים">
+    ${n>1?`<a class="btn" href="#session-${n-1}">→ מפגש ${n-1}</a>`:"<span></span>"}
+    ${n<6?`<a class="btn" href="#session-${n+1}">מפגש ${n+1} ←</a>`:"<span></span>"}
+  </nav>`;
+}
+
+function galleryHTML(n, s){
+  const photos = Array.isArray(s.photos) ? s.photos : [];
+  const canAdd = S.isFac && S.assets;
+  if (!photos.length && !canAdd) return "";
+  return `<section class="cat">
+    <div class="sec-head"><h2>תמונות מהמפגש</h2>${canAdd?`<label class="btn small primary" for="ph-${n}">הוספת תמונות</label><input type="file" id="ph-${n}" data-photos="${n}" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden>`:""}</div>
+    ${photos.length?`<ul class="gallery">${photos.map(id=>`<li><a href="/_blob/${esc(encodeURIComponent(id))}" target="_blank" rel="noopener"><img src="/_blob/${esc(encodeURIComponent(id))}" alt="תמונה ממפגש ${n}" loading="lazy"></a>${S.isFac?`<button class="rm" type="button" data-act="rm-photo" data-n="${n}" data-id="${esc(id)}">הסרה</button>`:""}</li>`).join("")}</ul>`:`<div class="empty">עדיין לא נוספו תמונות.</div>`}
+  </section>`;
+}
+async function savePhotos(n, photos){
+  const ref = S.db.doc("official/session-"+n);
+  if (S.sessions[n]) await ref.update({photos, updatedAt:Date.now()}); else await ref.set({photos, updatedAt:Date.now()});
+}
+
+function matType(d){
+  if (d.kind === "link") return "link";
+  const t = d.contentType || "";
+  if (t === "application/pdf") return "pdf";
+  if (t.startsWith("image/")) return "image";
+  if (t.startsWith("video/")) return "video";
+  return "doc";
+}
+const TYPE_LABEL = {link:"קישור",pdf:"PDF",image:"תמונה",video:"וידאו",doc:"מסמך"};
+function materialHref(d){ return d.kind === "link" ? safeUrl(d.url) : (d.assetId ? "/_blob/" + encodeURIComponent(d.assetId) : ""); }
+
+function materialCard(d){
+  const href = materialHref(d); const t = matType(d);
+  return `<li class="item ${d.official?"is-official":""}">
+    <div class="meta"><span class="chip kind">${TYPE_LABEL[t]}</span>${d.official?`<span class="chip off">רשמי</span>`:""}${d.topic?`<span class="chip">${esc(d.topic)}</span>`:""}</div>
+    <h3>${href?`<a href="${esc(href)}" target="_blank" rel="noopener">${esc(d.title)}</a>`:esc(d.title)}</h3>
+    ${d.desc?`<p>${esc(d.desc)}</p>`:""}
+    <div class="meta">${authorHTML(d.createdBy)}${d.session?`<a href="#session-${esc(d.session)}">מפגש ${esc(d.session)}</a>`:""}${d.fileName?`<span>${esc(d.fileName)}</span>`:""}</div>
+    ${canManage(d)?`<div class="actions"><button class="btn small" data-act="edit-material" data-id="${esc(d.id)}" type="button">עריכה</button></div>`:""}
+  </li>`;
+}
+function readingCard(d){
+  const link = safeUrl(d.link);
+  return `<li class="item">
+    <h3>${esc(d.title)}</h3>
+    ${d.author?`<span class="book-by">${esc(d.author)}</span>`:""}
+    ${d.why?`<p>${esc(d.why)}</p>`:""}
+    <div class="meta"><span>הומלץ על ידי ${esc(d.recommendedBy || nameOf(d.createdBy))}</span>${d.session?`<a href="#session-${esc(d.session)}">מפגש ${esc(d.session)}</a>`:""}${link?`<a href="${esc(link)}" target="_blank" rel="noopener">מידע נוסף</a>`:""}</div>
+    ${d.createdBy?`<div class="meta">נוסף על ידי ${authorHTML(d.createdBy)}</div>`:""}
+    ${canManage(d)?`<div class="actions"><button class="btn small" data-act="edit-reading" data-id="${esc(d.id)}" type="button">עריכה</button></div>`:""}
+  </li>`;
+}
+function insightCard(d, showCat){
+  const q = d.type === "question";
+  return `<li class="ins ${q?"question":""}">
+    <div class="meta"><span class="chip ${q?"q":"kind"}">${q?"שאלה":"תובנה"}</span>${showCat&&d.category?`<span class="chip">${esc(d.category)}. ${esc(catName(d.category))}</span>`:""}</div>
+    <p>${esc(d.text)}</p>
+    <div class="meta">${authorHTML(d.createdBy)}${d.session?`<a href="#session-${esc(d.session)}">מפגש ${esc(d.session)}</a>`:"<span>ללא מפגש</span>"}
+    ${canManage(d)?`<button class="btn small ghost" data-act="edit-insight" data-id="${esc(d.id)}" type="button">עריכה</button>`:""}</div>
+  </li>`;
+}
+
+function viewMaterials(){
+  const f = S.f;
+  const topics = [...new Set(S.materials.map(d => d.topic).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"he"));
+  const items = S.materials.filter(d =>
+    (!f.mSession || String(d.session||"none")===f.mSession) &&
+    (!f.mTopic || d.topic===f.mTopic) &&
+    (!f.mType || matType(d)===f.mType));
+  return `<section class="cat">
+    <div class="sec-head"><h2>קבצים וקישורים</h2>${S.canWrite?`<button class="btn primary" data-act="add-material" type="button">הוספת קובץ או קישור</button>`:""}</div>
+    <p class="hint">מדור משותף לכל המשתתפים. כל אחד יכול להוסיף ולערוך את מה שהוסיף; פריטים שסומנו "רשמי" נוספו על ידי המנחה.</p>
+    <div class="filters">
+      <label>מפגש<select id="f-mSession" data-filter="mSession"><option value="">כל המפגשים</option>${SESSIONS.map(n=>`<option value="${n}" ${f.mSession==String(n)?"selected":""}>מפגש ${n}</option>`).join("")}<option value="none" ${f.mSession==="none"?"selected":""}>ללא שיוך</option></select></label>
+      <label>נושא<select id="f-mTopic" data-filter="mTopic"><option value="">כל הנושאים</option>${topics.map(t=>`<option ${f.mTopic===t?"selected":""}>${esc(t)}</option>`).join("")}</select></label>
+      <label>סוג חומר<select id="f-mType" data-filter="mType"><option value="">כל הסוגים</option>${Object.entries(TYPE_LABEL).map(([k,v])=>`<option value="${k}" ${f.mType===k?"selected":""}>${v}</option>`).join("")}</select></label>
+    </div>
+    ${items.length?`<ul class="grid2">${items.map(materialCard).join("")}</ul>`:`<div class="empty">${S.materials.length?"אין חומרים שמתאימים לסינון.":"עדיין לא נוספו חומרים. אפשר להתחיל בכפתור ההוספה."}</div>`}
+  </section>`;
+}
+
+function viewReading(){
+  const f = S.f;
+  const items = S.reading.filter(d => !f.rSession || String(d.session||"none")===f.rSession);
+  return `<section class="cat">
+    <div class="sec-head"><h2>המלצות קריאה</h2>${S.canWrite?`<button class="btn primary" data-act="add-reading" type="button">הוספת המלצה</button>`:""}</div>
+    <p class="hint">ספרים ומקורות שעלו בשיחות, עם הסבר קצר למה הם רלוונטיים.</p>
+    <div class="filters"><label>מפגש<select id="f-rSession" data-filter="rSession"><option value="">כל המפגשים</option>${SESSIONS.map(n=>`<option value="${n}" ${f.rSession==String(n)?"selected":""}>מפגש ${n}</option>`).join("")}<option value="none" ${f.rSession==="none"?"selected":""}>ללא שיוך</option></select></label></div>
+    ${items.length?`<ul class="grid2">${items.map(readingCard).join("")}</ul>`:`<div class="empty">${S.reading.length?"אין המלצות שמתאימות לסינון.":"עדיין לא נוספו המלצות קריאה."}</div>`}
+  </section>`;
+}
+
+function viewInsights(){
+  const f = S.f;
+  const base = S.insights.filter(d =>
+    (!f.iSession || String(d.session||"none")===f.iSession) &&
+    (!f.iType || (f.iType==="question" ? d.type==="question" : d.type!=="question")) &&
+    (!f.iCat || String(d.category)===f.iCat));
+  let body;
+  if (f.iView === "cat") {
+    const cats = f.iCat ? CATS.filter(c => String(c.n)===f.iCat) : CATS;
+    body = cats.map(c => { const its = base.filter(d => String(d.category)===String(c.n)); return `<section class="cat">
+      <div class="cat-head"><span class="cat-n">${c.n}</span><div><h3>${esc(c.t)}</h3><p>${esc(c.q)}</p></div></div>
+      ${its.length?`<ul class="list">${its.map(d=>insightCard(d,false)).join("")}</ul>`:`<div class="empty">עדיין אין כאן תובנות או שאלות.${S.canWrite?` <button class="btn small" data-act="add-insight" data-cat="${c.n}" type="button">להוסיף ראשונה</button>`:""}</div>`}
+    </section>`;}).join("");
+  } else {
+    const groups = [...SESSIONS.map(String), "none"].filter(k => !f.iSession || k===f.iSession);
+    body = groups.map(k => { const its = base.filter(d => String(d.session||"none")===k); if (!its.length && k==="none") return ""; return `<section class="cat">
+      <div class="sec-head"><h2 style="font-size:1.25rem">${k==="none"?"ללא שיוך למפגש":esc(sessName(k))}</h2></div>
+      ${its.length?`<ul class="list">${its.map(d=>insightCard(d,true)).join("")}</ul>`:`<div class="empty">אין פריטים.</div>`}</section>`;}).join("");
+  }
+  return `<section class="cat">
+    <div class="sec-head"><h2>תובנות ושאלות גדולות</h2>${S.canWrite?`<button class="btn primary" data-act="add-insight" type="button">הוספת תובנה או שאלה</button>`:""}</div>
+    <p class="hint">מרחב משותף לאיסוף תובנות ושאלות לאורך התהליך, לפי שבע הקטגוריות.</p>
+    <div class="filters">
+      <label>תצוגה<span class="seg" role="group"><button type="button" data-view="cat" aria-pressed="${f.iView==="cat"}">לפי קטגוריה</button><button type="button" data-view="session" aria-pressed="${f.iView==="session"}">לפי מפגש</button></span></label>
+      <label>קטגוריה<select id="f-iCat" data-filter="iCat">${catOptions(f.iCat,true)}</select></label>
+      <label>מפגש<select id="f-iSession" data-filter="iSession"><option value="">כל המפגשים</option>${SESSIONS.map(n=>`<option value="${n}" ${f.iSession==String(n)?"selected":""}>מפגש ${n}</option>`).join("")}<option value="none" ${f.iSession==="none"?"selected":""}>ללא שיוך</option></select></label>
+      <label>סוג<select id="f-iType" data-filter="iType"><option value="">תובנות ושאלות</option><option value="insight" ${f.iType==="insight"?"selected":""}>רק תובנות</option><option value="question" ${f.iType==="question"?"selected":""}>רק שאלות</option></select></label>
+    </div>
+  </section>${body}`;
+}
+
+/* ---------- feedback ---------- */
+function viewFeedback(){
+  const mine = S.myFeedback || {};
+  return `<section class="cat">
+    <div class="sec-head"><h2>משוב והצעות למפגשים הבאים</h2></div>
+    <p class="hint">השאלון גלוי רק לך ולמנחה. אפשר למלא משוב על כל מפגש, ולחזור ולעדכן.</p>
+    ${S.canWrite && S.myId ? `<form id="fb-form" class="modal" style="max-width:none;box-shadow:none;border:1px solid var(--line);animation:none">
+      <label class="field"><span>על איזה מפגש המשוב?</span><select id="fb-session" name="session">${sessOptions(mine._last||"",true,"משוב כללי על התהליך")}</select></label>
+      <fieldset><legend>עד כמה המפגש היה משמעותי עבורך?</legend><div class="rating">${[1,2,3,4,5].map(v=>`<label><input type="radio" name="rating" value="${v}" id="fb-r${v}"> ${v}</label>`).join("")}</div><small class="hint">1 = מעט, 5 = מאוד</small></fieldset>
+      <label class="field"><span>מה עבד טוב?</span><textarea id="fb-good" name="good"></textarea></label>
+      <label class="field"><span>מה כדאי לשפר?</span><textarea id="fb-improve" name="improve"></textarea></label>
+      <label class="field"><span>נושאים או שאלות שהיית רוצה שנעסוק בהם במפגשים הבאים</span><textarea id="fb-topics" name="topics"></textarea></label>
+      <label class="field"><span>אורחים, מקורות או פורמטים שכדאי להביא</span><textarea id="fb-guests" name="guests"></textarea></label>
+      <div class="row"><button class="btn primary" type="submit">שמירת המשוב</button><span class="hint" id="fb-status"></span></div>
+    </form>` : `<div class="notice">כדי למלא משוב צריך הרשאת עריכה באתר.</div>`}
+  </section>
+  <section class="cat" id="fb-side"></section>`;
+}
+function fillFeedbackForm(){
+  const form = $("#fb-form"); if (!form) return;
+  const key = form.session.value || "general";
+  const r = ((S.myFeedback||{}).responses||{})[key] || {};
+  form.querySelectorAll("input[name=rating]").forEach(i => i.checked = String(r.rating)===i.value);
+  ["good","improve","topics","guests"].forEach(k => form[k].value = r[k] || "");
+  $("#fb-status").textContent = r.updatedAt ? "המשוב הזה נשמר. אפשר לעדכן." : "";
+}
+function renderFeedbackSide(){
+  const el = $("#fb-side"); if (!el) return;
+  if (!S.isFac) { el.innerHTML = ""; return; }
+  const rows = [];
+  S.feedback.forEach(doc => Object.entries(doc.responses||{}).forEach(([k,r]) => rows.push({uid:doc.id, key:k, ...r})));
+  rows.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const avg = k => { const rs = rows.filter(r=>r.key===k && r.rating); return rs.length ? (rs.reduce((s,r)=>s+ +r.rating,0)/rs.length).toFixed(1) : null; };
+  el.innerHTML = `<div class="sec-head"><h2>תשובות המשתתפים</h2><p>${rows.length} תשובות · גלוי רק למנחה</p></div>
+    <div class="row">${SESSIONS.map(n=>{const a=avg(String(n));return a?`<span class="chip">מפגש ${n}: ממוצע ${a}</span>`:"";}).join("")}</div>
+    ${rows.length?`<div class="list">${rows.map(r=>`<article class="fb-card">
+      <div class="spread"><b>${r.key==="general"?"משוב כללי":esc(sessName(r.key))}</b>${authorHTML(r.uid)}</div>
+      <dl>${r.rating?`<dt>דירוג</dt><dd>${esc(r.rating)} מתוך 5</dd>`:""}${r.good?`<dt>מה עבד</dt><dd>${esc(r.good)}</dd>`:""}${r.improve?`<dt>מה לשפר</dt><dd>${esc(r.improve)}</dd>`:""}${r.topics?`<dt>נושאים להמשך</dt><dd>${esc(r.topics)}</dd>`:""}${r.guests?`<dt>אורחים ומקורות</dt><dd>${esc(r.guests)}</dd>`:""}</dl>
+    </article>`).join("")}</div>`:`<div class="empty">עדיין לא התקבלו תשובות.</div>`}`;
+}
+
+/* ---------- modals ---------- */
+let modalCleanup = null;
+function openModal(html, onSubmit, onMount){
+  const root = $("#modal-root");
+  root.innerHTML = `<div class="overlay" id="ov"><form class="modal" id="mf" novalidate>${html}
+    <p class="err" id="m-err" hidden></p>
+    <div class="spread"><div class="row"><button class="btn primary" type="submit" id="m-save">שמירה</button><button class="btn" type="button" data-close>ביטול</button></div><div class="row" id="m-extra"></div></div>
+  </form></div>`;
+  const form = $("#mf");
+  const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  root.querySelector("[data-close]").onclick = close;
+  $("#ov").addEventListener("mousedown", e => { if (e.target.id === "ov") close(); });
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const err = $("#m-err"); err.hidden = true;
+    const btn = $("#m-save"); btn.disabled = true; btn.textContent = "שומר…";
+    try { await onSubmit(form); close(); }
+    catch (x) { err.textContent = x && x.userMsg ? x.userMsg : saveError(x); err.hidden = false; btn.disabled = false; btn.textContent = "שמירה"; }
+  });
+  if (onMount) onMount(form, close);
+  const first = form.querySelector("input:not([type=hidden]):not([type=radio]),textarea,select"); if (first) first.focus();
+}
+function saveError(x){
+  const c = x && x.code;
+  if (c === "invalid_argument") return "השמירה נדחתה. ייתכן שאין לך הרשאה לשנות את הפריט הזה.";
+  if (c === "quota_exceeded") return "המאגר התמלא. יש לפנות למנחה.";
+  if (c === "too_large") return "הקובץ גדול מדי (עד 20MB).";
+  if (c === "unsupported_type") return "סוג הקובץ אינו נתמך. אפשר להעלות PDF, תמונה, וידאו או טקסט, או לצרף קישור.";
+  return "השמירה לא הצליחה. נסו שוב בעוד רגע.";
+}
+const fail = m => { const e = new Error(m); e.userMsg = m; return e; };
+function addDelete(form, close, doc, coll){
+  const ex = $("#m-extra"); let armed = false;
+  const b = document.createElement("button"); b.type="button"; b.className="btn danger small"; b.textContent="מחיקה";
+  b.onclick = async () => {
+    if (!armed) { armed = true; b.textContent = "ללחוץ שוב לאישור המחיקה"; return; }
+    b.disabled = true;
+    try {
+      await S.db.doc(coll + "/" + doc.id).delete();
+      if (doc.assetId && S.assets) { try { await S.assets.delete(doc.assetId); } catch {} }
+      close(); toast("נמחק");
+    } catch (x) { const err=$("#m-err"); err.textContent = saveError(x); err.hidden=false; b.disabled=false; }
+  };
+  ex.appendChild(b);
+}
+const stamp = (d, isNew) => isNew ? {...d, createdBy:S.myId, createdAt:Date.now(), updatedAt:Date.now()} : {...d, updatedAt:Date.now(), updatedBy:S.myId};
+
+function materialModal(doc, preset={}){
+  const isNew = !doc; const d = doc || {kind:"link", session:preset.session||""};
+  const canUpload = !!S.assets;
+  const topics = [...new Set([...CATS.map(c=>c.t), ...S.materials.map(m=>m.topic).filter(Boolean)])];
+  openModal(`<h2>${isNew?"הוספת קובץ או קישור":"עריכת פריט"}</h2>
+    ${isNew?`<div class="seg" role="group" aria-label="סוג"><button type="button" data-kind="link" aria-pressed="true">קישור</button><button type="button" data-kind="file" aria-pressed="false">קובץ</button></div>`:""}
+    <input type="hidden" name="kind" id="m-kind" value="${esc(d.kind)}">
+    <label class="field"><span>כותרת</span><input type="text" id="m-title" name="title" required value="${esc(d.title||"")}"></label>
+    <label class="field"><span>תיאור קצר</span><textarea id="m-desc" name="desc">${esc(d.desc||"")}</textarea></label>
+    <div id="m-link-box" class="field" ${d.kind==="link"?"":"hidden"}><label class="field"><span>קישור</span><input type="url" id="m-url" name="url" dir="ltr" placeholder="https://" value="${esc(d.url||"")}"></label><small>למשל קישור למסמך ב-Google Drive, למאמר או לסרטון.</small></div>
+    <div id="m-file-box" class="field" ${d.kind==="file"&&isNew?"":"hidden"}>
+      ${canUpload?`<label class="field"><span>קובץ</span><input type="file" id="m-file" name="file" accept="${FILE_ACCEPT}"></label><small>PDF, תמונה, וידאו או קובץ טקסט, עד 20MB. מסמכי Word ומצגות כדאי לשמור כ-PDF או לצרף כקישור.</small>`
+      :`<p class="notice">העלאת קבצים אינה זמינה בחשבון שלך כרגע. אפשר להעלות את הקובץ ל-Google Drive או לשירות דומה ולצרף כאן קישור.</p>`}
+    </div>
+    ${!isNew&&d.kind==="file"?`<p class="hint">קובץ מצורף: ${esc(d.fileName||"")}</p>`:""}
+    <div class="two">
+      <label class="field"><span>שיוך למפגש</span><select id="m-session" name="session">${sessOptions(d.session)}</select></label>
+      <label class="field"><span>נושא או קטגוריה</span><input type="text" id="m-topic" name="topic" list="m-topics" value="${esc(d.topic||"")}"><datalist id="m-topics">${topics.map(t=>`<option value="${esc(t)}"></option>`).join("")}</datalist></label>
+    </div>
+    ${S.isFac?`<label class="check"><input type="checkbox" id="m-official" name="official" ${d.official?"checked":""}> לסמן כחומר רשמי של המנחה</label>`:""}`,
+  async form => {
+    const title = form.title.value.trim(); if (!title) throw fail("יש למלא כותרת.");
+    const kind = form.kind.value;
+    const out = {kind, title, desc:form.desc.value.trim(), session:form.session.value, topic:form.topic.value.trim(), official: S.isFac ? form.official.checked : !!d.official};
+    if (kind === "link") {
+      const u = safeUrl(form.url.value); if (!u) throw fail("יש להזין קישור תקין שמתחיל ב-https://");
+      out.url = u;
+    } else if (isNew) {
+      const f = form.file && form.file.files[0]; if (!f) throw fail("יש לבחור קובץ.");
+      if (f.size > 20*1024*1024) throw fail("הקובץ גדול מדי (עד 20MB).");
+      const ext = (f.name.split(".").pop()||"").toLowerCase();
+      const type = TYPE_BY_EXT[ext]; if (!type) throw fail("סוג הקובץ אינו נתמך. אפשר להעלות PDF, תמונה, וידאו או טקסט, או לצרף קישור.");
+      const res = await S.assets.upload(f, {type});
+      out.assetId = res.id; out.contentType = res.contentType; out.fileName = f.name;
+    }
+    if (isNew) await S.db.collection("materials").add(stamp(out, true));
+    else await S.db.doc("materials/"+d.id).update(stamp(out, false));
+    toast(isNew ? "נוסף לספרייה" : "נשמר");
+  },
+  (form, close) => {
+    form.querySelectorAll("[data-kind]").forEach(b => b.onclick = () => {
+      form.querySelectorAll("[data-kind]").forEach(x => x.setAttribute("aria-pressed", x===b));
+      form.kind.value = b.dataset.kind;
+      $("#m-link-box").hidden = b.dataset.kind !== "link"; $("#m-file-box").hidden = b.dataset.kind !== "file";
+    });
+    if (!isNew) addDelete(form, close, d, "materials");
+  });
+}
+
+function readingModal(doc, preset={}){
+  const isNew = !doc; const d = doc || {session:preset.session||""};
+  openModal(`<h2>${isNew?"הוספת המלצת קריאה":"עריכת המלצה"}</h2>
+    <label class="field"><span>שם הספר או המקור</span><input type="text" id="r-title" name="title" value="${esc(d.title||"")}"></label>
+    <label class="field"><span>מחבר/ת</span><input type="text" id="r-author" name="author" value="${esc(d.author||"")}"></label>
+    <label class="field"><span>למה זה רלוונטי לנו?</span><textarea id="r-why" name="why">${esc(d.why||"")}</textarea></label>
+    <div class="two">
+      <label class="field"><span>מי המליץ</span><input type="text" id="r-by" name="recommendedBy" value="${esc(d.recommendedBy || (isNew ? nameOf(S.myId, S.me&&S.me.name) : ""))}"></label>
+      <label class="field"><span>באיזה מפגש עלה</span><select id="r-session" name="session">${sessOptions(d.session)}</select></label>
+    </div>
+    <label class="field"><span>קישור למידע נוסף (לא חובה)</span><input type="url" id="r-link" name="link" dir="ltr" placeholder="https://" value="${esc(d.link||"")}"></label>`,
+  async form => {
+    const title = form.title.value.trim(); if (!title) throw fail("יש למלא את שם הספר או המקור.");
+    const raw = form.link.value.trim(); const link = raw ? safeUrl(raw) : "";
+    if (raw && !link) throw fail("הקישור אינו תקין.");
+    const out = {title, author:form.author.value.trim(), why:form.why.value.trim(), recommendedBy:form.recommendedBy.value.trim(), session:form.session.value, link};
+    if (isNew) await S.db.collection("reading").add(stamp(out, true)); else await S.db.doc("reading/"+d.id).update(stamp(out,false));
+    toast(isNew ? "ההמלצה נוספה" : "נשמר");
+  },
+  (form, close) => { if (!isNew) addDelete(form, close, d, "reading"); });
+}
+
+function insightModal(doc, preset={}){
+  const isNew = !doc; const d = doc || {type:"insight", session:preset.session||"", category:preset.cat||""};
+  openModal(`<h2>${isNew?"הוספת תובנה או שאלה":"עריכה"}</h2>
+    <div class="seg" role="group" aria-label="סוג"><button type="button" data-type="insight" aria-pressed="${d.type!=="question"}">תובנה</button><button type="button" data-type="question" aria-pressed="${d.type==="question"}">שאלה</button></div>
+    <input type="hidden" name="type" id="i-type" value="${d.type==="question"?"question":"insight"}">
+    <label class="field"><span>התוכן</span><textarea id="i-text" name="text" required>${esc(d.text||"")}</textarea></label>
+    <label class="field"><span>קטגוריה</span><select id="i-cat" name="category"><option value="">יש לבחור קטגוריה</option>${catOptions(d.category)}</select></label>
+    <label class="field"><span>המפגש שבו עלתה</span><select id="i-session" name="session">${sessOptions(d.session)}</select></label>`,
+  async form => {
+    const text = form.text.value.trim(); if (!text) throw fail("יש לכתוב את התובנה או השאלה.");
+    if (!form.category.value) throw fail("יש לבחור קטגוריה.");
+    const out = {type:form.type.value, text, category:form.category.value, session:form.session.value};
+    if (isNew) await S.db.collection("insights").add(stamp(out, true)); else await S.db.doc("insights/"+d.id).update(stamp(out,false));
+    toast(isNew ? "נוסף" : "נשמר");
+  },
+  (form, close) => {
+    form.querySelectorAll("[data-type]").forEach(b => b.onclick = () => { form.querySelectorAll("[data-type]").forEach(x => x.setAttribute("aria-pressed", x===b)); form.type.value = b.dataset.type; });
+    if (!isNew) addDelete(form, close, d, "insights");
+  });
+}
+
+function homeModal(){
+  const h = S.home || {};
+  openModal(`<h2>עריכת עמוד הפתיחה</h2>
+    <label class="field"><span>שם התהליך (מופיע בראש האתר)</span><input type="text" id="h-pn" name="processName" value="${esc(h.processName||"")}"></label>
+    <label class="field"><span>כותרת ראשית</span><input type="text" id="h-title" name="title" value="${esc(h.title||"")}"></label>
+    <label class="field"><span>מטרת התהליך</span><textarea id="h-purpose" name="purpose">${esc(h.purpose||"")}</textarea></label>
+    <label class="field"><span>למה התהליך הזה</span><textarea id="h-why" name="why">${esc(h.why||"")}</textarea></label>
+    <label class="field"><span>השאלה המרכזית</span><textarea id="h-q" name="question">${esc(h.question||"")}</textarea></label>`,
+  async form => {
+    const out = {}; ["processName","title","purpose","why","question"].forEach(k => out[k] = form[k].value.trim());
+    await S.db.doc("official/home").set({...out, updatedAt:Date.now()}); toast("עמוד הפתיחה עודכן");
+  });
+}
+function sessionModal(n){
+  const s = S.sessions[n] || {};
+  openModal(`<h2>עריכת מפגש ${n}</h2>
+    <div class="two"><label class="field"><span>תאריך</span><input type="date" id="s-date" name="date" value="${esc(s.date||"")}"></label>
+    <label class="field"><span>כותרת</span><input type="text" id="s-title" name="title" value="${esc(s.title||"")}"></label></div>
+    <label class="field"><span>תיאור קצר</span><textarea id="s-desc" name="description">${esc(s.description||"")}</textarea></label>
+    <label class="field"><span>סיכום המפגש</span><textarea id="s-sum" name="summary" style="min-height:180px">${esc(s.summary||"")}</textarea></label>
+    <label class="field"><span>נושאים ושאלות שעלו</span><textarea id="s-topics" name="topics">${esc(s.topics||"")}</textarea><small>כל שורה תוצג כפריט ברשימה.</small></label>
+    <label class="field"><span>תובנות מרכזיות</span><textarea id="s-ins" name="insights">${esc(s.insights||"")}</textarea><small>כל שורה תוצג כפריט ברשימה.</small></label>`,
+  async form => {
+    const out = {}; ["date","title","description","summary","topics","insights"].forEach(k => out[k] = form[k].value.trim());
+    await S.db.doc("official/session-"+n).set({...out, updatedAt:Date.now()}); toast("המפגש עודכן");
+  });
+}
+function profileModal(){
+  const cur = (S.people[S.myId]||{}).name || (S.me && S.me.name) || "";
+  openModal(`<h2>השם שלי</h2><label class="field"><span>השם שיוצג ליד התכנים שתוסיפו</span><input type="text" id="p-name" name="name" value="${esc(cur)}"></label>`,
+  async form => {
+    const name = form.name.value.trim(); if (!name) throw fail("יש להזין שם.");
+    await S.db.doc("people/"+S.myId).set({name, updatedAt:Date.now()}); toast("השם נשמר");
+  });
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act],[data-view]"); if (!b) return;
+  if (b.dataset.view) { S.f.iView = b.dataset.view; render(true); return; }
+  const a = b.dataset.act, id = b.dataset.id;
+  const find = (arr) => arr.find(x => x.id === id);
+  const preset = {session:b.dataset.session||"", cat:b.dataset.cat||""};
+  if (!S.db) return;
+  if (a === "profile") { if (S.myId && S.canWrite) profileModal(); }
+  else if (a === "edit-home") homeModal();
+  else if (a === "edit-session") sessionModal(+b.dataset.n);
+  else if (a === "add-material") materialModal(null, preset);
+  else if (a === "add-reading") readingModal(null, preset);
+  else if (a === "add-insight") insightModal(null, preset);
+  else if (a === "edit-material") { const d = find(S.materials); d && materialModal(d); }
+  else if (a === "edit-reading") { const d = find(S.reading); d && readingModal(d); }
+  else if (a === "edit-insight") { const d = find(S.insights); d && insightModal(d); }
+  else if (a === "rm-photo") {
+    const n = +b.dataset.n;
+    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "לאשר הסרה"; return; }
+    const photos = ((S.sessions[n]||{}).photos||[]).filter(x => x !== id);
+    savePhotos(n, photos).then(() => { S.assets && S.assets.delete(id).catch(()=>{}); toast("התמונה הוסרה"); }).catch(x => toast(saveError(x)));
+  }
+});
+document.addEventListener("change", e => {
+  const f = e.target.dataset && e.target.dataset.filter;
+  if (f) { S.f[f] = e.target.value; render(true); return; }
+  if (e.target.id === "fb-session") fillFeedbackForm();
+  if (e.target.dataset && e.target.dataset.photos) {
+    const n = +e.target.dataset.photos; const files = [...e.target.files];
+    if (!files.length || !S.assets) return;
+    (async () => {
+      const ids = [];
+      for (const [i, f] of files.entries()) {
+        toast(`מעלה תמונה ${i+1} מתוך ${files.length}…`);
+        const ext = (f.name.split(".").pop()||"").toLowerCase();
+        try { const r = await S.assets.upload(f, {type: TYPE_BY_EXT[ext] || f.type}); ids.push(r.id); } catch (x) { toast(saveError(x)); }
+      }
+      if (ids.length) { await savePhotos(n, [...((S.sessions[n]||{}).photos||[]), ...ids]); toast(`נוספו ${ids.length} תמונות`); }
+    })().catch(x => toast(saveError(x)));
+  }
+});
+document.addEventListener("submit", async e => {
+  if (e.target.id !== "fb-form") return;
+  e.preventDefault();
+  const form = e.target; const st = $("#fb-status");
+  const key = form.session.value || "general";
+  const rating = (form.querySelector("input[name=rating]:checked")||{}).value || "";
+  const r = {rating, good:form.good.value.trim(), improve:form.improve.value.trim(), topics:form.topics.value.trim(), guests:form.guests.value.trim(), updatedAt:Date.now()};
+  if (!rating && !r.good && !r.improve && !r.topics && !r.guests) { st.textContent = "יש למלא לפחות שדה אחד."; return; }
+  const responses = {...((S.myFeedback||{}).responses||{}), [key]: r};
+  st.textContent = "שומר…";
+  try { await S.db.doc("feedback/"+S.myId).set({responses, updatedAt:Date.now()}); S.myFeedback = {responses}; st.textContent = "תודה! המשוב נשמר."; }
+  catch (x) { st.textContent = saveError(x); }
+});
+
+/* ---------- boot ---------- */
+async function boot(){
+  if (!window.claude || !window.claude.use) { S.ready = true; render(true); return; }
+  const [db, user, assets] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("assets")]);
+  S.db = db; S.user = user; S.assets = assets;
+  if (user) {
+    const [me, isOwner, can] = await Promise.all([user.me(), user.isOwner(), user.can("data.write")]);
+    S.me = me; S.myId = me.id; S.isFac = isOwner; S.canWrite = can !== false;
+  }
+  if (!db) { S.canWrite = false; S.ready = true; render(true); return; }
+  if (!S.myId) S.canWrite = false;
+  const onErr = () => {};
+  const pending = new Set(["official","materials","reading","insights","people"]);
+  const done = k => { pending.delete(k); if (!pending.size && !S.ready) { S.ready = true; } render(); refreshProfiles(); };
+  db.collection("official").onSnapshot(snap => {
+    const sessions = {}; let home = null;
+    snap.docs.forEach(d => { const v = d.data(); if (d.id === "home") home = v; const m = /^session-(\d)$/.exec(d.id); if (m) sessions[+m[1]] = v; });
+    S.home = home; S.sessions = sessions; done("official");
+  }, onErr);
+  const list = (name, key) => db.collection(name).onSnapshot(snap => {
+    S[key] = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); done(name);
+  }, onErr);
+  list("materials","materials"); list("reading","reading"); list("insights","insights");
+  db.collection("people").onSnapshot(snap => { const p = {}; snap.docs.forEach(d => p[d.id] = d.data()); S.people = p; done("people"); }, onErr);
+  if (S.isFac) db.collection("feedback").onSnapshot(snap => { S.feedback = snap.docs.map(d => ({id:d.id, ...d.data()})); render(); refreshProfiles(); }, onErr);
+  if (S.myId) db.doc("feedback/"+S.myId).onSnapshot(d => { const first = S.myFeedback === null; S.myFeedback = d.exists ? d.data() : {}; if (first) fillFeedbackForm(); }, onErr);
+  setTimeout(() => { if (!S.ready) { S.ready = true; render(true); } }, 6000);
+}
+render(true);
+boot();
+})();
+</script>

@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    // Facilitators are listed by lower-case email in /facilitators/{email} (added in the Firebase console).
+    function isFac() {
+      return signedIn() && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/facilitators/$(request.auth.token.email.lower()));
+    }
+    function offFlagKept() {
+      return request.resource.data.get('official', false) == resource.data.get('official', false);
+    }
+
+    match /facilitators/{email} {
+      allow read: if signedIn() && email == request.auth.token.email.lower();
+    }
+    // Home page and per-session official content: facilitators only.
+    match /official/{id} {
+      allow read: if signedIn();
+      allow write: if isFac();
+    }
+    // Participant content: anyone signed in adds; only the author or a facilitator edits or deletes.
+    match /{coll}/{id} {
+      allow read: if signedIn() && coll in ['materials', 'reading', 'insights'];
+      allow create: if signedIn() && coll in ['materials', 'reading', 'insights']
+        && (isFac() || (request.resource.data.createdBy == uid() && request.resource.data.get('official', false) == false));
+      allow update: if signedIn() && coll in ['materials', 'reading', 'insights']
+        && (isFac() || (resource.data.createdBy == uid() && request.resource.data.createdBy == uid() && offFlagKept()));
+      allow delete: if signedIn() && coll in ['materials', 'reading', 'insights']
+        && (isFac() || resource.data.createdBy == uid());
+    }
+    // Display names chosen in the site, and Google profile name/photo.
+    match /people/{u} {
+      allow read: if signedIn();
+      allow write: if signedIn() && u == uid();
+    }
+    match /profiles/{u} {
+      allow read: if signedIn();
+      allow write: if signedIn() && u == uid();
+    }
+    // Feedback questionnaire: private to its author; facilitators read all.
+    match /feedback/{u} {
+      allow read: if signedIn() && (u == uid() || isFac());
+      allow write: if signedIn() && u == uid();
+    }
+  }
+}

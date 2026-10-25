@@ -1,0 +1,4 @@
+dist/
+*-debug.log
+node_modules/
+fac.png
