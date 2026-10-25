@@ -142,13 +142,14 @@
   /* ---------- sign-in UI ---------- */
   const css = `
 #live-login{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:16px;background:var(--bg,#f3f6f5)}
-#live-login .card{max-width:420px;width:100%;background:var(--surface,#fff);border:1px solid var(--line,#d3dedb);border-radius:14px;padding:28px;text-align:center;direction:rtl}
-#live-login h1{font-family:var(--f-display,sans-serif);font-size:1.5rem;margin:0 0 8px}
+#live-login .card{max-width:440px;width:100%;background:var(--surface,#fff);border-top:4px solid var(--accent,#0e5446);border-radius:4px;padding:32px;box-shadow:0 30px 60px -24px rgba(0,0,0,.35);text-align:center;direction:rtl}
+#live-login h1{font-family:var(--f-display,sans-serif);font-size:1.8rem;font-weight:900;letter-spacing:-.02em;margin:0 0 8px}
 #live-login p{color:var(--muted,#566a70);margin:0 0 20px}
 #live-login button,#live-signout{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line,#d3dedb)}
-#live-login button{background:var(--accent,#0d6b5e);color:var(--accent-ink,#fff);border:0;padding:12px 20px;font-weight:700;width:100%}
+#live-login button{background:var(--accent,#0e5446);color:var(--accent-ink,#fff);border:0;border-radius:4px;padding:12px 20px;font-weight:700;width:100%}
 #live-login .msg{min-height:1.4em;margin-top:12px;font-size:.9rem;color:var(--danger,#b23a2e)}
-#live-signout{position:fixed;bottom:12px;left:12px;z-index:50;background:var(--surface,#fff);color:var(--muted,#566a70);padding:6px 12px;font-size:.85rem}
+#live-signout{background:transparent;border:0;color:var(--muted,#566a70);padding:4px 8px;font-size:.84rem;font-weight:700;flex:none}
+#live-signout:hover{color:var(--ink,#17211d)}
 #live-seed{position:fixed;bottom:12px;right:12px;left:12px;z-index:60;max-width:520px;margin:auto;background:var(--official,#fbf3dd);border:1px solid var(--official-line,#e3c56f);color:var(--ink,#14252b);border-radius:12px;padding:14px 16px;direction:rtl;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 #live-seed button{font:inherit;cursor:pointer;border-radius:8px;border:0;background:var(--accent,#0d6b5e);color:var(--accent-ink,#fff);padding:8px 14px;font-weight:700}`;
   const style = document.createElement("style"); style.textContent = css; document.head.appendChild(style);
@@ -182,7 +183,9 @@
     const b = document.createElement("button");
     b.id = "live-signout"; b.type = "button"; b.textContent = "התנתקות";
     b.onclick = () => A.signOut(auth).then(() => location.reload());
-    document.body.appendChild(b);
+    // Sits in the page header next to the user's name; the page re-renders #who, not its parent row.
+    const row = document.querySelector(".top-row");
+    if (row) row.appendChild(b); else document.body.appendChild(b);
   }
 
   /* ---------- first-run import of the content migrated from the Claude version ---------- */
