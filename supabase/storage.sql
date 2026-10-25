@@ -2,7 +2,7 @@
 -- Authentication → Third-party Auth → Firebase with the Firebase project id first, so Supabase accepts
 -- Firebase ID tokens. Those tokens carry no `role` claim, so requests run as `anon`; every policy below
 -- therefore checks that the token was issued by our Firebase project.
--- Replace FIREBASE_PROJECT_ID and the facilitator emails, then run this in the SQL Editor.
+-- Replace yad-hanadiv-study and the facilitator emails, then run this in the SQL Editor.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('yad-hanadiv-study', 'yad-hanadiv-study', true, 20971520,
@@ -12,14 +12,11 @@ on conflict (id) do update set public = excluded.public, file_size_limit = exclu
 
 create table if not exists public.yad_hanadiv_facilitators (email text primary key);
 alter table public.yad_hanadiv_facilitators enable row level security;
-insert into public.yad_hanadiv_facilitators (email) values
-  ('facilitator@example.com')
-on conflict do nothing;
 
 create or replace function public.yad_hanadiv_is_firebase_user() returns boolean
 language sql stable set search_path = '' as $$
-  select coalesce(auth.jwt() ->> 'iss', '') = 'https://securetoken.google.com/FIREBASE_PROJECT_ID'
-     and coalesce(auth.jwt() ->> 'aud', '') = 'FIREBASE_PROJECT_ID'
+  select coalesce(auth.jwt() ->> 'iss', '') = 'https://securetoken.google.com/yad-hanadiv-study'
+     and coalesce(auth.jwt() ->> 'aud', '') = 'yad-hanadiv-study'
 $$;
 
 create or replace function public.yad_hanadiv_is_facilitator() returns boolean
