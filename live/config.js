@@ -2,11 +2,11 @@
 window.LIVE_CONFIG = {
   siteName: "מרחב הלמידה המשותף",
   firebase: {
-    apiKey: "REPLACE_ME",
-    authDomain: "REPLACE_ME.firebaseapp.com",
-    projectId: "REPLACE_ME",
-    messagingSenderId: "REPLACE_ME",
-    appId: "REPLACE_ME",
+    apiKey: "AIzaSyAmD3Q98AKu8VKgfhVvYp2JnC7yGkgpvU0",
+    authDomain: "yad-hanadiv-study.firebaseapp.com",
+    projectId: "yad-hanadiv-study",
+    messagingSenderId: "837677286967",
+    appId: "1:837677286967:web:4f1d016673ab7143cce1b2",
   },
   // Uploaded files go to this public Supabase Storage bucket (see supabase/storage.sql). Leave url empty for links only.
   supabase: {
