@@ -1,26 +1,27 @@
 /* Live-site adapter: implements the subset of the Claude artifact runtime (window.claude.use "db" | "user" | "assets")
-   that site-src/index.html uses, on top of Firebase Auth + Firestore + Storage. Loaded as a classic script before the
+   that site-src/index.html uses: Firebase Auth + Firestore for sign-in and data, Supabase Storage for uploaded files. Loaded as a classic script before the
    page's own script, so window.claude exists when boot() runs. Config comes from window.LIVE_CONFIG (config.js). */
 (function () {
   const CFG = window.LIVE_CONFIG;
   const V = "10.14.1";
   const sdk = name => import(`https://www.gstatic.com/firebasejs/${V}/firebase-${name}.js`);
-  const BUCKET = CFG.firebase.storageBucket;
   const MAX_BYTES = 20 * 1024 * 1024;
   const ALLOWED = /^(application\/pdf|image\/|video\/|text\/)/;
 
   // The page links uploaded files as "/_blob/<id>"; the build rewrites those to __blobUrl(id).
-  const STORAGE_ORIGIN = CFG.emulators ? `http://${CFG.emulators.host}:9199` : "https://firebasestorage.googleapis.com";
-  // Files migrated from the Claude version are served from the site itself (assets-map.js, written by the build).
-  // New uploads go to Firebase Storage only when CFG.uploads is on (needs the Blaze plan); otherwise the page offers links only.
-  const UPLOADS = !!CFG.uploads;
+  // Files migrated from the Claude version are served from the site itself (assets-map.js, written by the build);
+  // new uploads live in a public Supabase Storage bucket. Without CFG.supabase the page offers links only.
+  const SB = CFG.supabase && CFG.supabase.url && CFG.supabase.anonKey ? CFG.supabase : null;
   window.__blobUrl = id => (window.STATIC_ASSETS || {})[id]
-    || `${STORAGE_ORIGIN}/v0/b/${BUCKET}/o/${encodeURIComponent("assets/" + id)}?alt=media`;
+    || (SB ? `${SB.url}/storage/v1/object/public/${SB.bucket}/${encodeURIComponent(id)}` : "");
 
   const err = (code, cause) => Object.assign(new Error(code), { code, cause });
   const mapErr = x => {
     const c = (x && x.code) || "";
-    if (c.includes("permission-denied") || c.includes("unauthorized")) return err("invalid_argument", x);
+    const status = String((x && (x.statusCode || x.status)) || "");
+    if (c.includes("permission-denied") || c.includes("unauthorized") || status === "403" || status === "401") return err("invalid_argument", x);
+    if (status === "413") return err("too_large", x);
+    if (status === "415") return err("unsupported_type", x);
     if (c.includes("quota") || c.includes("resource-exhausted")) return err("quota_exceeded", x);
     return x;
   };
@@ -29,10 +30,10 @@
   let ready;
   const start = () => ready || (ready = (async () => {
     if (!CFG.firebase.apiKey || CFG.firebase.apiKey === "REPLACE_ME") { comingSoon(); await new Promise(() => {}); }
-    const [{ initializeApp }, A, F, S] = await Promise.all([sdk("app"), sdk("auth"), sdk("firestore"), UPLOADS ? sdk("storage") : null]);
+    const [{ initializeApp }, A, F] = await Promise.all([sdk("app"), sdk("auth"), sdk("firestore")]);
     const app = initializeApp(CFG.firebase);
-    const auth = A.getAuth(app), fs = F.getFirestore(app), st = UPLOADS ? S.getStorage(app) : null;
-    if (CFG.emulators) await useEmulators(CFG.emulators, { A, F, S, auth, fs, st });
+    const auth = A.getAuth(app), fs = F.getFirestore(app);
+    if (CFG.emulators) await useEmulators(CFG.emulators, { A, F, auth, fs });
     const user = await new Promise(res => {
       const off = A.onAuthStateChanged(auth, u => { if (u) { off(); res(u); } else loginScreen(auth, A); });
     });
@@ -42,16 +43,18 @@
     F.setDoc(F.doc(fs, "profiles", user.uid), { name: me.name, avatarUrl: me.avatarUrl, updatedAt: Date.now() }).catch(() => {});
     const facSnap = await F.getDoc(F.doc(fs, "facilitators", (user.email || "").toLowerCase())).catch(() => null);
     const isFac = !!(facSnap && facSnap.exists());
-    const env = { A, F, S, auth, fs, st, me, isFac, uid: user.uid };
+    // Supabase accepts the Firebase ID token (Third-party Auth), so its storage policies see who is uploading.
+    const sb = SB ? (await import(SB.sdk || "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm"))
+      .createClient(SB.url, SB.anonKey, { accessToken: async () => (auth.currentUser ? auth.currentUser.getIdToken() : null) }) : null;
+    const env = { A, F, auth, fs, sb, me, isFac, uid: user.uid };
     if (isFac) offerSeed(env);
     return env;
   })());
 
   // Local testing only (scripts/test): Firebase emulators, optionally signed in as a fake Google account.
-  async function useEmulators(em, { A, F, S, auth, fs, st }) {
+  async function useEmulators(em, { A, F, auth, fs }) {
     A.connectAuthEmulator(auth, `http://${em.host}:9099`, { disableWarnings: true });
     F.connectFirestoreEmulator(fs, em.host, 8080);
-    if (st) S.connectStorageEmulator(st, em.host, 9199);
     if (em.signInAs) {
       const claims = { sub: em.signInAs.uid, email: em.signInAs.email, email_verified: true, name: em.signInAs.name };
       await A.signInWithCredential(auth, A.GoogleAuthProvider.credential(JSON.stringify(claims)));
@@ -103,18 +106,25 @@
   }
 
   /* ---------- assets ---------- */
-  const newId = () => [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
-  function makeAssets({ S, st, uid }) {
+  // Object names start with the uploader's uid, which the storage policies use to let people delete only their own files.
+  const newId = uid => uid + "-" + [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
+  const sbCall = p => p.then(({ data, error }) => { if (error) throw mapErr(error); return data; });
+  function makeAssets({ sb, uid }) {
+    const bucket = sb.storage.from(SB.bucket);
     return {
       upload: async (file, opts = {}) => {
         const contentType = opts.type || file.type || "application/octet-stream";
         if (file.size > MAX_BYTES) throw err("too_large");
         if (!ALLOWED.test(contentType)) throw err("unsupported_type");
-        const id = newId();
-        await wrap(S.uploadBytes(S.ref(st, "assets/" + id), file, { contentType, customMetadata: { owner: uid } }));
+        const id = newId(uid);
+        await sbCall(bucket.upload(id, file, { contentType, upsert: false }));
         return { id, contentType, size: file.size };
       },
-      delete: id => wrap(S.deleteObject(S.ref(st, "assets/" + id))),
+      delete: async id => {
+        if ((window.STATIC_ASSETS || {})[id]) throw err("invalid_argument");
+        const removed = await sbCall(bucket.remove([id]));
+        if (!removed || !removed.length) throw err("invalid_argument");
+      },
       url: id => window.__blobUrl(id),
     };
   }
@@ -124,7 +134,7 @@
       const env = await start();
       if (name === "db") return makeDb(env);
       if (name === "user") return makeUser(env);
-      if (name === "assets") return UPLOADS ? makeAssets(env) : null;
+      if (name === "assets") return env.sb ? makeAssets(env) : null;
       return null;
     },
   };
@@ -176,7 +186,7 @@
   }
 
   /* ---------- first-run import of the content migrated from the Claude version ---------- */
-  async function offerSeed({ F, S, fs, st, uid }) {
+  async function offerSeed({ F, fs }) {
     const home = await F.getDoc(F.doc(fs, "official", "home")).catch(() => null);
     if (!home || home.exists()) return;
     const res = await fetch("seed/data.json").catch(() => null);
@@ -189,13 +199,6 @@
     bar.querySelector("button").onclick = async () => {
       const span = bar.querySelector("span"); bar.querySelector("button").remove();
       try {
-        const ids = UPLOADS ? Object.keys(seed.assets) : [];
-        for (const [i, id] of ids.entries()) {
-          span.textContent = `מעלה קבצים (${i + 1}/${ids.length})…`;
-          const a = seed.assets[id];
-          const blob = await (await fetch("seed/" + a.file)).blob();
-          await S.uploadBytes(S.ref(st, "assets/" + id), blob, { contentType: a.contentType, customMetadata: { owner: uid } });
-        }
         span.textContent = "שומר תכנים…";
         const batch = F.writeBatch(fs);
         for (const [path, data] of Object.entries(seed.docs)) batch.set(F.doc(fs, path), data);
