@@ -24,6 +24,7 @@
 
   let ready;
   const start = () => ready || (ready = (async () => {
+    if (!CFG.firebase.apiKey || CFG.firebase.apiKey === "REPLACE_ME") { comingSoon(); await new Promise(() => {}); }
     const [{ initializeApp }, A, F, S] = await Promise.all([sdk("app"), sdk("auth"), sdk("firestore"), sdk("storage")]);
     const app = initializeApp(CFG.firebase);
     const auth = A.getAuth(app), fs = F.getFirestore(app), st = S.getStorage(app);
@@ -152,6 +153,14 @@
         if (x && x.code !== "auth/popup-closed-by-user" && x.code !== "auth/cancelled-popup-request") msg.textContent = "ההתחברות לא הצליחה. נסו שוב.";
       }
     };
+    (document.body || document.documentElement).appendChild(el);
+  }
+
+  // Shown until live/config.js holds a real Firebase config.
+  function comingSoon() {
+    const el = document.createElement("div");
+    el.id = "live-login";
+    el.innerHTML = `<div class="card"><h1>${CFG.siteName}</h1><p>האתר יעלה לאוויר בקרוב.</p></div>`;
     (document.body || document.documentElement).appendChild(el);
   }
 
